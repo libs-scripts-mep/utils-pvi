@@ -1,6 +1,22 @@
 class UtilsPVI {
 
     /**
+     * Retorna o caminho da pasta do script que está sendo executado, baseado no HTML.
+     * @returns string
+     */
+    static getScriptPath() {
+        return location.pathname.slice(location.pathname.indexOf("C:/"), location.pathname.lastIndexOf("/"))
+    }
+
+    /**
+     * Retorna o caminho da pasta do PVI em execucao
+     * @returns string
+     */
+    static getPVIPath() {
+        return pvi.runInstructionS("getpvipath", [])
+    }
+
+    /**
      * Verifica se e a primeira execucao de teste
      * @returns boolean
      */

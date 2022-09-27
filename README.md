@@ -10,6 +10,12 @@ Abra o terminal, e na pasta do script, execute:
 npm i @libs-scripts-mep/utils-pvi
 ```
 
+Inclua em seu .html:
+
+```html
+<script src="node_modules/@libs-scripts-mep/utils-pvi/utils-pvi.js"></script>
+```
+
 ## Desinstalando
 
 Abra o terminal, e na pasta do script, execute:
@@ -24,6 +30,22 @@ npm uninstall @libs-scripts-mep/utils-pvi
 //utils-pvi.js
 
 class UtilsPVI {
+
+    /**
+     * Retorna o caminho da pasta do script que está sendo executado, baseado no HTML.
+     * @returns string
+     */
+    static getScriptPath() {
+        return location.pathname.slice(location.pathname.indexOf("C:/"), location.pathname.lastIndexOf("/"))
+    }
+
+    /**
+     * Retorna o caminho da pasta do PVI em execucao
+     * @returns string
+     */
+    static getPVIPath() {
+        return pvi.runInstructionS("getpvipath", [])
+    }
 
     /**
      * Verifica se e a primeira execucao de teste
