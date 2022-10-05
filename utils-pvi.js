@@ -152,5 +152,23 @@ class UtilsPVI {
             }
         }
     }
+
+    /**
+     * Solicita ao operador para beepar as etiquetas dos componentes de teste que ele esta utilizando
+     * @param {String} RegexComponente regex para validar o valor recebido do prompt 
+     * @param {String} Mensagem mensagem a ser exibida para operador no prompt
+     * @param {function} callback funcao de retorno
+     */
+    static SolicitaComponenteDeTeste(RegexComponente, Mensagem, callback) {
+        let Componente = prompt(Mensagem)
+
+        Componente = Componente.match(RegexComponente)
+
+        if (Componente != null) {
+            callback(true, Componente)
+        } else {
+            callback(false)
+        }
+    }
 }
 
