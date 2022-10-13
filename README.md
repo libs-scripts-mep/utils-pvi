@@ -139,8 +139,6 @@ class UtilsPVI {
 
 ```
 
-outra que possui metodos utilitarios relacionados ao script
-
 ```js
 //utils-script.js
 
@@ -292,3 +290,4 @@ class Log {
         }
     }
 }
+```
