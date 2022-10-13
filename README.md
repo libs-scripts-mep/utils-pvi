@@ -36,7 +36,18 @@ class UtilsPVI {
      * @returns string
      */
     static getScriptPath() {
-        return location.pathname.slice(location.pathname.indexOf("C:/"), location.pathname.lastIndexOf("/"))
+        
+        let i = location.pathname.slice(location.pathname.indexOf("I:/"), location.pathname.lastIndexOf("/"))
+        let c = location.pathname.slice(location.pathname.indexOf("C:/"), location.pathname.lastIndexOf("/"))
+
+        if (i.length < 0) {
+            return i
+        } else if (C.length < 0) {
+            return c
+        } else {
+            return false
+        }
+        
     }
 
     /**
