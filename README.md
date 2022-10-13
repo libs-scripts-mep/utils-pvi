@@ -280,7 +280,7 @@ class Log {
      * @param {String} cor nome da propriedade cor. exemplo: Log.PaleGreen , caso a opcao seja de uma cor especifica é necessario passar uma string em hexadecimal. exemplo #00FF00
      * @param {bool} corEspecifica parametro opicional para utilizar uma cor especifica no console.log
      * 
-     * Exemplo de uma chamada do metodo : Log.color("Mensagem",this.Red)
+     * Exemplo de uma chamada do metodo : Log.color("Mensagem",Log.Red)
      */
     static color(msg, cor, corEspecifica = false) {
         if (!corEspecifica) {
