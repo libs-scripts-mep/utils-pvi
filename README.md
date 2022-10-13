@@ -14,6 +14,7 @@ Inclua em seu .html:
 
 ```html
 <script src="node_modules/@libs-scripts-mep/utils-pvi/utils-pvi.js"></script>
+<script src="node_modules/@libs-scripts-mep/utils-pvi/utils-script.js"></script>
 ```
 
 ## Desinstalando
