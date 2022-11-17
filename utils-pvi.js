@@ -169,11 +169,18 @@ class UtilsPVI {
     static SolicitaComponenteDeTeste(RegexComponente, Mensagem, callback) {
         let Componente = prompt(Mensagem)
 
-        Componente = Componente.match(RegexComponente)
+        try {
+            Componente = Componente.toUpperCase()
 
-        if (Componente != null) {
-            callback(true, Componente)
-        } else {
+            Componente = Componente.match(RegexComponente)
+
+            if (Componente != null) {
+                callback(true, Componente)
+            } else {
+                callback(false)
+            }
+        } catch (e) {
+            console.log(e.message)
             callback(false)
         }
     }
