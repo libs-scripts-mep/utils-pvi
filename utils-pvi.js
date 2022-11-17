@@ -170,12 +170,14 @@ class UtilsPVI {
         let Componente = prompt(Mensagem)
 
         try {
-            Componente = Componente.toUpperCase()
-
+            
             Componente = Componente.match(RegexComponente)
-
+            
             if (Componente != null) {
+
+                Componente = Componente[0].toUpperCase()
                 callback(true, Componente)
+
             } else {
                 callback(false)
             }
