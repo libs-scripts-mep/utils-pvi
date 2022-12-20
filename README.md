@@ -147,6 +147,28 @@ class UtilsPVI {
             callback(false)
         }
     }
+
+    /**
+     * Para gravação através do software JLink v7.82 é necessário criar um arquivo com os comandos que serão executados
+     * Gera um arquivo temporario na TEMP do windows
+     * @param {int} speed frequencia de gravação
+     * @param {string} firmware 
+     * @param {function} callback 
+     */
+    static GeraCommandFile(speed, firmware, callback = () => { }) {
+        function idUnico() { // gera um id unico para usar como nome do arquivo
+            return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            )
+        }
+
+        let id = idUnico()
+
+        pvi.runInstructionS("EXEC", ["cmd.exe", `/c (echo si 1 & echo speed ${speed} & echo r & echo h & echo erase & echo loadfile ${firmware} & echo exit) > %TEMP%/${id}.tmp`, "true", "true"]) // comando que gera o arquivo a partir do cmd
+
+        pvi.runInstructionS("EXEC", ["cmd.exe", "/c echo %TEMP%", "true", "true"]) // captura o caminho da pasta temp
+        callback(`${pvi.runInstructionS("getvar", ["_return"])}\\${id}.tmp`) // monta o caminho do arquivo .tmp e retorna para salvar no sessionStorage
+    }
 }
 
 ```
