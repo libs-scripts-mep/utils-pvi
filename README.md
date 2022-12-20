@@ -324,4 +324,38 @@ class Log {
         }
     }
 }
+
+class Calc {
+
+    /**
+    * @param {Object} arrayElements vetor de elementos para calculo do desvio padrao
+    *
+    * Exemplo de uma chamada do metodo : RetornoDesvioPadrao = Calc.calcDesvioPadrao(VetorDeElementos)
+    */
+
+    static calcDesvioPadrao(arrayElements) {
+
+        let numElements = arrayElements.length
+        let somaElements = 0
+        let calcMedia;
+
+        let somaDividendoDesvioPadrao = 0
+        let desvioPadrao
+
+        for (let cont = 0; cont < numElements; cont++) {
+            somaElements = somaElements + arrayElements[cont]
+        }
+
+        calcMedia = somaElements / numElements
+
+        for (let i = 0; i < numElements; i++) {
+            somaDividendoDesvioPadrao = somaDividendoDesvioPadrao + Math.pow((arrayElements[i] - calcMedia), 2)
+        }
+
+        desvioPadrao = Math.sqrt((somaDividendoDesvioPadrao / numElements))
+
+        return desvioPadrao
+    }
+}
+
 ```

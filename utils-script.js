@@ -150,7 +150,7 @@ class Log {
 class Calc {
 
     /**
-    * @param {String} arrayElements vetor de elementos para calculo do desvio padrao
+    * @param {Object} arrayElements vetor de elementos para calculo do desvio padrao
     *
     * Exemplo de uma chamada do metodo : RetornoDesvioPadrao = Calc.calcDesvioPadrao(VetorDeElementos)
     */
@@ -162,7 +162,7 @@ class Calc {
         let calcMedia;
 
         let somaDividendoDesvioPadrao = 0
-        let DesvioPadrao
+        let desvioPadrao
 
         for (let cont = 0; cont < numElements; cont++) {
             somaElements = somaElements + arrayElements[cont]
@@ -174,8 +174,8 @@ class Calc {
             somaDividendoDesvioPadrao = somaDividendoDesvioPadrao + Math.pow((arrayElements[i] - calcMedia), 2)
         }
 
-        DesvioPadrao = Math.sqrt((somaDividendoDesvioPadrao / numElements))
+        desvioPadrao = Math.sqrt((somaDividendoDesvioPadrao / numElements))
 
-        return DesvioPadrao
+        return desvioPadrao
     }
 }
