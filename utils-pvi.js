@@ -160,6 +160,22 @@ class UtilsPVI {
         }
     }
 
+    static OpenJson(path, callback) {
+        fetch(path)
+            .then((resposta) => {
+                console.log(resposta)
+                return resposta.json()
+            })
+            .then((data) => {
+                console.log(data)
+                callback(data)
+            })
+            .catch((retornoReject) => {
+                alert(retornoReject)
+                return false
+            })
+    }
+
     /**
      * Solicita ao operador para beepar as etiquetas dos componentes de teste que ele esta utilizando
      * @param {String} RegexComponente regex para validar o valor recebido do prompt 
