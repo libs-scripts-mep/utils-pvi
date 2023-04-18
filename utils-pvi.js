@@ -95,22 +95,30 @@ class UtilsPVI {
     }
 
     /**
-     * retorna dados do servidor para OP ou numero de serie
-     * @param {function} callback 
-     */
-    static requestERP(callback) {
+       * retorna dados do servidor para OP ou numero de serie
+       * @param {function} callback 
+       * @param {object} config
+       */
+    static requestERP(callback,
+        config = {
+            msgPrompt: "Informe o Número de Serie da Peca ou OP do Lote.\nEx [OP]: OP-123456-1\nEx [SN]: 1000001234567",
+            msgAlert: "Número informado nao e nem um número de serie, nem uma OP",
+            somenteOP: false
+        }) {
 
-        let number = prompt("Informe o Número de Serie da Peca ou OP do Lote.\nEx [OP]: OP-123456-1\nEx [SN]: 1000001234567")
+        const { msgPrompt, msgAlert, somenteOP } = config
+
+        let number = prompt(msgPrompt)
         let httpReq = new XMLHttpRequest()
         let URL = null
 
         if (number != null) {
-            if (number.toString().match(/[1][0][0][0][0][0-9]{8}/) != null) {
+            if (!somenteOP && number.toString().match(/[1][0][0][0][0][0-9]{8}/) != null) {
                 URL = "http://rast.inova.ind.br/api/effective/products/" + number.toString()
             } else if (number.match(/[o|O][p|P][a-zA-Z]?[a-zA-Z]?[[a-zA-Z]?[-][0-9]{1,7}[-][0-1]/) != null) {
                 URL = "http://rast.inova.ind.br/api/effective/orders/0/" + number.toString()
             } else {
-                window.alert("Número informado nao e nem um número de serie, nem uma OP")
+                window.alert(msgAlert)
                 location.reload()
             }
         } else {
