@@ -1,5 +1,4 @@
 class Log {
-
     static Black = "color: #000000"
     static grey11 = "color: #1C1C1C"
     static grey31 = "color: #4F4F4F"
@@ -159,7 +158,7 @@ class Calc {
 
         let numElements = arrayElements.length
         let somaElements = 0
-        let calcMedia;
+        let calcMedia
 
         let somaDividendoDesvioPadrao = 0
         let desvioPadrao
