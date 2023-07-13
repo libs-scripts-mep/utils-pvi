@@ -72,6 +72,7 @@ class UtilsPVI {
                                 callback(config)
                             } else {
                                 window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
+                                sessionStorage.clear()
                                 location.reload()
                             }
                         })
