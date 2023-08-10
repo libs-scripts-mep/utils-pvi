@@ -23,14 +23,6 @@ class UtilsPVI {
         return pvi.runInstructionS("getpvipath", [])
     }
 
-    /**
-     * Verifica se e a primeira execucao de teste
-     * @returns boolean
-     */
-    static isFirstExec() {
-        return pvi.getVar("_execcount") == 0
-    }
-
     static openJson(path, callback) {
         fetch(path)
             .then((resposta) => {
