@@ -1,6 +1,6 @@
 {
   "name": "@libs-scripts-mep/utils-pvi",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Funções auxiliares da infraestrutura de testes (PVI e Effective)",
   "main": "utils-pvi.js",
   "scripts": {
