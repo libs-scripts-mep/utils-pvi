@@ -114,7 +114,7 @@ class UtilsPVI {
         let URL = null
 
         if (number != null) {
-            if (!somenteOP && number.toString().match(/[1][0][0][0][0][0-9]{8}/) != null) {
+            if (!somenteOP && number.toString().match(/[1][0-9]{9,12}/) != null) {
                 URL = "http://rast.inova.ind.br/api/effective/products/" + number.toString()
             } else if (number.match(/[o|O][p|P][a-zA-Z]?[a-zA-Z]?[[a-zA-Z]?[-][0-9]{1,7}[-][0-1]/) != null) {
                 URL = "http://rast.inova.ind.br/api/effective/orders/0/" + number.toString()
