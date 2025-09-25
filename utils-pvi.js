@@ -40,50 +40,13 @@ class UtilsPVI {
      * @param {function} callback 
      */
     static CarregaJson(callback) {
-
         //aguarda UI ser renderizada (conforto visual)
         setTimeout(() => {
-
-            if (isNaN(parseInt(sessionStorage.getItem("ProductCode")))) {
-
-                this.requestERP((dataErp) => {
-
-                    if (dataErp != null) {
-
-                        sessionStorage.setItem("RequisicaoInicialERP", dataErp)
-
-                        let ERPDataUnparsed = sessionStorage.getItem("RequisicaoInicialERP")
-                        let ERPDataParsed = JSON.parse(ERPDataUnparsed)
-
-                        if (ERPDataParsed.hasOwnProperty("Information")) {
-                            //Caso for passado um número de serie para configuracao
-                            sessionStorage.setItem("ProductCode", ERPDataParsed.Information.ProductCode)
-                            sessionStorage.setItem("SerialNumber", ERPDataParsed.Code)
-                        } else if (ERPDataParsed.hasOwnProperty("Product")) {
-                            //Caso for passado um número de uma OP para configuracao
-                            sessionStorage.setItem("ProductCode", ERPDataParsed.Product.ProductCode)
-                        } else {
-                            window.alert("Objeto retornado do ERP e invalido!")
-                            location.reload()
-                        }
-
-                        this.configuraTeste(sessionStorage.getItem("ProductCode"), (config) => {
-                            if (config != null) {
-                                callback(config)
-                            } else {
-                                window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
-                                sessionStorage.clear()
-                                location.reload()
-                            }
-                        })
-
-                    } else {
-                        location.reload()
-                    }
-                })
-
+            if (pvi.runInstructionS("rastreamento.getproductcode", []) == "") {
+                Log.color("Informações do produto não estão previamente carregadas no PVI", Log.OrangeRed)
+                this.requestERP(() => location.reload())
             } else {
-                this.configuraTeste(sessionStorage.getItem("ProductCode"), (config) => {
+                this.configuraTeste(pvi.runInstructionS("rastreamento.getproductcode", []), (config) => {
                     if (config != null) {
                         callback(config)
                     } else {
@@ -102,45 +65,31 @@ class UtilsPVI {
        */
     static requestERP(callback,
         config = {
-            msgPrompt: "Informe o Número de Serie da Peca ou OP do Lote.\nEx [OP]: OP-123456-1\nEx [SN]: 1000001234567",
-            msgAlert: "Número informado nao e nem um número de serie, nem uma OP",
-            somenteOP: false
+            msgPrompt: "Informe o Número de Serie da Peça\nEx [SN]: 1000001234567",
+            msgAlert: "Número informado não é um número de série"
         }) {
 
-        const { msgPrompt, msgAlert, somenteOP } = config
+        const { msgPrompt, msgAlert } = config
 
-        let number = prompt(msgPrompt)
-        let httpReq = new XMLHttpRequest()
-        let URL = null
+        const number = prompt(msgPrompt)
 
-        if (number != null) {
-            if (!somenteOP && number.toString().match(/[1][0-9]{9,12}/) != null) {
-                URL = "http://rast.inova.ind.br/api/effective/products/" + number.toString()
-            } else if (number.match(/[o|O][p|P][a-zA-Z]?[a-zA-Z]?[[a-zA-Z]?[-][0-9]{1,7}[-][0-1]/) != null) {
-                URL = "http://rast.inova.ind.br/api/effective/orders/0/" + number.toString()
-            } else {
-                window.alert(msgAlert)
-                location.reload()
-            }
+        if (new RegExp(/[1][0-9]{9,12}/).test(number)) {
+            sessionStorage.setItem("SerialNumber", number)
+            pvi.runInstructionS("rastreamento.setvalidations", ["false", "false", "false", "false"])
+            RastPVI.init(number, [], "")
+            RastPVI.Monitor((result, msg) => {
+                pvi.runInstructionS("rastreamento.setvalidations", ["enabled", "enabled", "enabled", "enabled"])
+                if (result) {
+                    callback()
+                } else {
+                    alert(`Não foi possível buscar as informações do número de série ${number} -> ${msg}`)
+                    location.reload()
+                }
+            }, 30000)
         } else {
-            window.alert("Número informado nao informado.")
+            alert(msgAlert)
             location.reload()
         }
-
-        httpReq.onreadystatechange = function () {
-
-            if (httpReq.readyState == 4 && httpReq.status == 200) {
-
-                callback(httpReq.responseText)
-                console.log("requisicao HTTP: " + httpReq.statusText)
-
-            } else if (httpReq.status.toString().match(/[3-5][0-9]{2}/) != null) {
-                callback(null)
-            }
-        }
-
-        httpReq.open("GET", URL, true)
-        httpReq.send()
     }
 
     /**
