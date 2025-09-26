@@ -39,108 +39,62 @@ class UtilsPVI {
      * Se encarrega de configurar o teste atraves do arquivo .JSON de configuracao, a partir da requisicao realizada ao effective utilizando o numero de serie informado
      * @param {function} callback 
      */
-    static CarregaJson(callback) {
-
-        //aguarda UI ser renderizada (conforto visual)
-        setTimeout(() => {
-
-            if (isNaN(parseInt(sessionStorage.getItem("ProductCode")))) {
-
-                this.requestERP((dataErp) => {
-
-                    if (dataErp != null) {
-
-                        sessionStorage.setItem("RequisicaoInicialERP", dataErp)
-
-                        let ERPDataUnparsed = sessionStorage.getItem("RequisicaoInicialERP")
-                        let ERPDataParsed = JSON.parse(ERPDataUnparsed)
-
-                        if (ERPDataParsed.hasOwnProperty("Information")) {
-                            //Caso for passado um número de serie para configuracao
-                            sessionStorage.setItem("ProductCode", ERPDataParsed.Information.ProductCode)
-                            sessionStorage.setItem("SerialNumber", ERPDataParsed.Code)
-                        } else if (ERPDataParsed.hasOwnProperty("Product")) {
-                            //Caso for passado um número de uma OP para configuracao
-                            sessionStorage.setItem("ProductCode", ERPDataParsed.Product.ProductCode)
-                        } else {
-                            window.alert("Objeto retornado do ERP e invalido!")
-                            location.reload()
-                        }
-
-                        this.configuraTeste(sessionStorage.getItem("ProductCode"), (config) => {
-                            if (config != null) {
-                                callback(config)
-                            } else {
-                                window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
-                                sessionStorage.clear()
-                                location.reload()
-                            }
-                        })
-
-                    } else {
-                        location.reload()
-                    }
-                })
-
-            } else {
-                this.configuraTeste(sessionStorage.getItem("ProductCode"), (config) => {
-                    if (config != null) {
-                        callback(config)
-                    } else {
-                        window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
-                        location.reload()
-                    }
-                })
-            }
-        }, 100)
+    static async CarregaJson(callback) {
+        if (pvi.runInstructionS("rastreamento.getproductcode", []) == "") {
+            Log.color("Informações do produto não estão previamente carregadas", Log.OrangeRed)
+            await this.rastInit()
+            location.reload()
+        } else {
+            this.configuraTeste(pvi.runInstructionS("rastreamento.getproductcode", []), (config) => {
+                if (config != null) {
+                    callback(config)
+                } else {
+                    window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
+                    location.reload()
+                }
+            })
+        }
     }
 
-    /**
-       * retorna dados do servidor para OP ou numero de serie
-       * @param {function} callback 
-       * @param {object} config
-       */
-    static requestERP(callback,
-        config = {
-            msgPrompt: "Informe o Número de Serie da Peca ou OP do Lote.\nEx [OP]: OP-123456-1\nEx [SN]: 1000001234567",
-            msgAlert: "Número informado nao e nem um número de serie, nem uma OP",
-            somenteOP: false
-        }) {
+    static async rastInit() {
+        pvi.runInstructionS("rastreamento.setvalidations", ["disabled", "disabled", "disabled", "disabled"])
+        const serialNumber = this.getSerialNumber()
+        pvi.runInstructionS("ras.init", ["true", serialNumber, []])
 
-        const { msgPrompt, msgAlert, somenteOP } = config
-
-        let number = prompt(msgPrompt)
-        let httpReq = new XMLHttpRequest()
-        let URL = null
-
-        if (number != null) {
-            if (!somenteOP && number.toString().match(/[1][0-9]{9,12}/) != null) {
-                URL = "http://rast.inova.ind.br/api/effective/products/" + number.toString()
-            } else if (number.match(/[o|O][p|P][a-zA-Z]?[a-zA-Z]?[[a-zA-Z]?[-][0-9]{1,7}[-][0-1]/) != null) {
-                URL = "http://rast.inova.ind.br/api/effective/orders/0/" + number.toString()
-            } else {
-                window.alert(msgAlert)
-                location.reload()
-            }
-        } else {
-            window.alert("Número informado nao informado.")
+        const observer = await this.rastObserver(serialNumber)
+        if (!observer.result) {
+            alert(`Não foi possível buscar as informações do produto com o número de série '${serialNumber}'!\n\n${observer.info.ResultError}: ${observer.info.Message}`)
             location.reload()
         }
+        pvi.runInstructionS("rastreamento.setvalidations", ["enabled", "enabled", "enabled", "enabled"])
+    }
 
-        httpReq.onreadystatechange = function () {
-
-            if (httpReq.readyState == 4 && httpReq.status == 200) {
-
-                callback(httpReq.responseText)
-                console.log("requisicao HTTP: " + httpReq.statusText)
-
-            } else if (httpReq.status.toString().match(/[3-5][0-9]{2}/) != null) {
-                callback(null)
-            }
+    /**@returns {string} */
+    static getSerialNumber() {
+        const serialNumber = prompt("Informe o número de serie do produto:\nEx: 1000001234567")
+        if (serialNumber == null || serialNumber == "") {
+            alert("É necessário informar o número de série!")
+            location.reload()
         }
+        return serialNumber
+    }
 
-        httpReq.open("GET", URL, true)
-        httpReq.send()
+    /** @returns {Promise<{ result: boolean, info: { ResultError: string, Message: string } }>} */
+    static async rastObserver(serialNumber) {
+        return new Promise((resolve) => {
+            const id = PVI.FWLink.globalDaqMessagesObservers.add((message, param) => {
+                if (message.includes(serialNumber)) {
+                    const result = param[0]
+                    const info = JSON.parse(param[1])
+
+                    if (message.includes("init")) {
+                        PVI.FWLink.globalDaqMessagesObservers.remove(id)
+                        console.log(`Rastreamento Init ${serialNumber}\n`, result, info)
+                        resolve({ result, info })
+                    }
+                }
+            }, "rastreamento")
+        })
     }
 
     /**
