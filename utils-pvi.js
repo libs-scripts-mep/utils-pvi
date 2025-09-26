@@ -39,57 +39,62 @@ class UtilsPVI {
      * Se encarrega de configurar o teste atraves do arquivo .JSON de configuracao, a partir da requisicao realizada ao effective utilizando o numero de serie informado
      * @param {function} callback 
      */
-    static CarregaJson(callback) {
-        //aguarda UI ser renderizada (conforto visual)
-        setTimeout(() => {
-            if (pvi.runInstructionS("rastreamento.getproductcode", []) == "") {
-                Log.color("Informações do produto não estão previamente carregadas no PVI", Log.OrangeRed)
-                this.requestERP(() => location.reload())
-            } else {
-                this.configuraTeste(pvi.runInstructionS("rastreamento.getproductcode", []), (config) => {
-                    if (config != null) {
-                        callback(config)
-                    } else {
-                        window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
-                        location.reload()
-                    }
-                })
-            }
-        }, 100)
-    }
-
-    /**
-       * retorna dados do servidor para OP ou numero de serie
-       * @param {function} callback 
-       * @param {object} config
-       */
-    static requestERP(callback,
-        config = {
-            msgPrompt: "Informe o Número de Serie da Peça\nEx [SN]: 1000001234567",
-            msgAlert: "Número informado não é um número de série"
-        }) {
-
-        const { msgPrompt, msgAlert } = config
-
-        const number = prompt(msgPrompt)
-
-        if (new RegExp(/[1][0-9]{9,12}/).test(number)) {
-            sessionStorage.setItem("SerialNumber", number)
-            pvi.runInstructionS("rastreamento.setvalidations", ["false", "false", "false", "false"])
-            RastPVI.init(number, [], "")
-            RastPVI.Monitor((result, msg) => {
-                pvi.runInstructionS("rastreamento.setvalidations", ["enabled", "enabled", "enabled", "enabled"])
-                if (result) {
-                    callback()
+    static async CarregaJson(callback) {
+        if (pvi.runInstructionS("rastreamento.getproductcode", []) == "") {
+            Log.color("Informações do produto não estão previamente carregadas", Log.OrangeRed)
+            await this.rastInit()
+            location.reload()
+        } else {
+            this.configuraTeste(pvi.runInstructionS("rastreamento.getproductcode", []), (config) => {
+                if (config != null) {
+                    callback(config)
                 } else {
-                    alert(`Não foi possível buscar as informações do número de série ${number} -> ${msg}`)
+                    window.alert("Arquivo de configuracao nao encontrado (.JSON). Entre em contato com o setor de Metodos e Processos")
                     location.reload()
                 }
-            }, 30000)
-        } else {
-            alert(msgAlert)
+            })
+        }
+    }
+
+    static async rastInit() {
+        pvi.runInstructionS("rastreamento.setvalidations", ["disabled", "disabled", "disabled", "disabled"])
+        const serialNumber = this.getSerialNumber()
+        pvi.runInstructionS("ras.init", ["true", serialNumber, []])
+
+        const observer = await this.rastObserver(serialNumber)
+        if (!observer.result) {
+            alert(`Não foi possível buscar as informações do produto com o número de série '${serialNumber}'!\n\n${observer.info.ResultError}: ${observer.info.Message}`)
             location.reload()
         }
+        pvi.runInstructionS("rastreamento.setvalidations", ["enabled", "enabled", "enabled", "enabled"])
+    }
+
+    /**@returns {string} */
+    static getSerialNumber() {
+        const serialNumber = prompt("Informe o número de serie do produto:\nEx: 1000001234567")
+        if (serialNumber == null || serialNumber == "") {
+            alert("É necessário informar o número de série!")
+            location.reload()
+        }
+        return serialNumber
+    }
+
+    /** @returns {Promise<{ result: boolean, info: { ResultError: string, Message: string } }>} */
+    static async rastObserver(serialNumber) {
+        return new Promise((resolve) => {
+            const id = PVI.FWLink.globalDaqMessagesObservers.add((message, param) => {
+                if (message.includes(serialNumber)) {
+                    const result = param[0]
+                    const info = JSON.parse(param[1])
+
+                    if (message.includes("init")) {
+                        PVI.FWLink.globalDaqMessagesObservers.remove(id)
+                        console.log(`Rastreamento Init ${serialNumber}\n`, result, info)
+                        resolve({ result, info })
+                    }
+                }
+            }, "rastreamento")
+        })
     }
 
     /**
