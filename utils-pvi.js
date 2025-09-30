@@ -41,7 +41,7 @@ class UtilsPVI {
      */
     static async CarregaJson(callback) {
         if (pvi.runInstructionS("rastreamento.getproductcode", []) == "") {
-            Log.color("Informações do produto não estão previamente carregadas", Log.OrangeRed)
+            console.log("%cInformações do produto não estão previamente carregadas", "color: #FF4500")
             await this.rastInit()
             location.reload()
         } else {
@@ -58,7 +58,8 @@ class UtilsPVI {
 
     static async rastInit() {
         pvi.runInstructionS("rastreamento.setvalidations", ["disabled", "disabled", "disabled", "disabled"])
-        const serialNumber = this.getSerialNumber()
+        const serialNumber = await this.getSerialNumber()
+        await this.setUser()
         pvi.runInstructionS("ras.init", ["true", serialNumber, []])
 
         const observer = await this.rastObserver(serialNumber)
@@ -69,14 +70,26 @@ class UtilsPVI {
         pvi.runInstructionS("rastreamento.setvalidations", ["enabled", "enabled", "enabled", "enabled"])
     }
 
-    /**@returns {string} */
-    static getSerialNumber() {
+    /**@returns {Promise<string>} */
+    static async getSerialNumber() {
         const serialNumber = prompt("Informe o número de serie do produto:\nEx: 1000001234567")
         if (serialNumber == null || serialNumber == "") {
             alert("É necessário informar o número de série!")
             location.reload()
+            await new Promise(r => { })
         }
         return serialNumber
+    }
+
+    static async setUser() {
+        if (pvi.runInstructionS("ras.getuser", []) != "") return
+
+        const user = prompt("Informe o Número do Cracha")
+        if (pvi.runInstructionS("ras.setuser", [user]) === "0") {
+            alert("Usuário inválido!")
+            location.reload()
+            await new Promise(r => { })
+        }
     }
 
     /** @returns {Promise<{ result: boolean, info: { ResultError: string, Message: string } }>} */
